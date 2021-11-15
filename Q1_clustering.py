@@ -43,6 +43,27 @@ def cluster(points,K,visuals = True):
         centroids.append(point)
         centroid_dict[i] = list()
 
+    
+    if(visuals == True):
+        Iteration = 0
+        print(f'Iteration {Iteration}')
+
+        x_vals = list()
+        y_vals = list()
+
+        for j in points:
+            x_vals.append(j[0])
+            y_vals.append(j[1])
+
+        plt.scatter(x_vals, y_vals, alpha = 0.5, edgecolor = 'w')
+
+        for i in range(K):
+            plt.scatter(centroids[i][0],centroids[i][1],marker =",",edgecolor='k',color='black')
+
+        plt.xlabel('X axis')
+        plt.ylabel('Y axis')
+        plt.show()
+
     while True:
 
         for p in range(len(points)):
@@ -85,7 +106,28 @@ def cluster(points,K,visuals = True):
             if(round(d) > 1):
                 centroids[i] = k_means[i]
                 changed_K += 1
-                
+
+
+        
+        if(visuals == True):
+            Iteration += 1
+            print(f'Iteration {Iteration}')
+            
+            for i in range(K):
+                x_vals = list()
+                y_vals = list()
+
+                for j in centroid_dict[i]:
+                    x_vals.append(j[0])
+                    y_vals.append(j[1])
+
+                plt.scatter(x_vals, y_vals, alpha = 0.5, edgecolor = 'w')
+                plt.scatter(centroids[i][0],centroids[i][1],marker =",",edgecolor='k',color='black')
+
+            plt.xlabel('X axis')
+            plt.ylabel('Y axis')
+            plt.show()                
+
         if(changed_K == 0):
             break
 
@@ -93,51 +135,69 @@ def cluster(points,K,visuals = True):
         for i in range(K):
             centroid_dict[i] = list()
 
-
-    if(visuals == True):
-
-        for i in range(K):
-            x_vals = list()
-            y_vals = list()
-
-            for j in centroid_dict[i]:
-                x_vals.append(j[0])
-                y_vals.append(j[1])
-
-            plt.scatter(x_vals, y_vals, alpha = 0.7, edgecolor = 'w')
-            plt.scatter(centroids[i][0],centroids[i][1],marker =",",edgecolor='k',color='r')
-
-        plt.xlabel('x axis')
-        plt.ylabel('y axis')
-        plt.show()
+    clusters.append(centroids)
+    clusters.append(centroid_dict)
 
     return clusters
 
 
 
 def clusterQuality(clusters):
-    score = -1
-    #Your code to compute the quality of cluster will go here.
+    
+    centroids = clusters[0]
+    centroid_dict = clusters[1]
+
+    sum_sq_err = 0
+
+    for i in range(K):
+        c = centroids[i]
+        
+        for p in centroid_dict[i]:
+            sum_sq_err += euclidean_distance(c, p)
+
+    score = sum_sq_err
     
     return score
     
 
 def keepClustering(points,K,N,visuals):
     clusters = []
+    clusters_list = []
+    scores_list = []
     
-    cluster(points, K)
-    #Write you code to run clustering N times and return the formation having the best quality. 
+    for i in range(N):
+        print(f'Running K-means for iteration number {i+1}')
+        cluster_generated = cluster(points, K, visuals = visuals)
+        clusters_list.append(cluster_generated)
+        score = clusterQuality(cluster_generated)
+        scores_list.append(score)
+    
+    min_score_index = scores_list.index(min(scores_list))
+    clusters = clusters_list[min_score_index]
+
+    centroids = clusters[0]
+    centroid_dict = clusters[1]            
     
     return clusters
     
 
+def newGaussClusters(K, count):
+    points = []
+    mean = 10
+    variance = 20
+
+    for i in range(count):
+        points.append([random.gauss(mean, variance), random.gauss(mean, variance)])
+
+    clusters = cluster(points, K, visuals=True)
 
 
 K = 3
 N = 10
 points = initializePoints(1000)
 
-clusters = keepClustering(points,K,N,True)
+clusters = keepClustering(points,K,N,False)
 
 print ("The score of best Kmeans clustering is:", clusterQuality(clusters))
 
+#newGaussClusters(K, 1000)
