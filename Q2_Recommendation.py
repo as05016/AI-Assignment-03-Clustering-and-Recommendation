@@ -3,21 +3,29 @@
 CS 351 - Artificial Intelligence 
 Assignment 3
 
-Student 1(Name and ID):
-Student 2(Name and ID):
+Altaf Shaikh - as05016:
+Maheen Anees - ma05156:
 
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math, random
 
 """This function takes actual and predicted ratings and compute total mean square error(mse) in observed ratings.
 """
 def computeError(R,predR):
     
-    """Your code to calculate MSE goes here"""    
-    
-    return 1000
+    """Your code to calculate MSE goes here"""   
+    MSE = 0 
+    n = 0 # number of elements
+    for  i in range(len(R)):
+        for j in range(len(R[0])):
+            if R[i][j] > 0:
+                n += 1
+                MSE += (R[i][j] - predR[i][j])**2
+    return  MSE/n
+
 
 
 """
@@ -27,9 +35,19 @@ where m = No of Users, n = No of items
 def getPredictedRatings(P,Q,U,I):
 
     """Your code to predict ratinngs goes here"""    
-
-    
-    return None
+    prediction = []
+    for i in range(len(P)):
+        prediction.append([])
+        for j in range(len(Q[0])):
+            prediction[i].append(0)
+            for k in range(len(Q)):
+                if k + 1 == len(Q):
+                    prediction[i][j] += (P[i][k] * Q[k][j])
+            prediction[i][j] += U[i] + I[j]
+            prediction[i][j] = math.floor(prediction[i][j])
+            if prediction[i][j] > 5:
+                prediction[i][j] = 5
+    return prediction
     
     
 """This fucntion runs gradient descent to minimze error in ratings by adjusting P, Q, U and I matrices based on gradients.
@@ -41,7 +59,22 @@ def runGradientDescent(R,P,Q,U,I,iterations,alpha):
     
     """Your gradient descent code goes here"""    
 
-    
+    for x in range(iterations):
+        predictedR = getPredictedRatings(P, Q, U, I)
+        mse = computeError(R, predictedR)
+        stats.append((x, mse))
+        for i in range(len(R)):
+            for j in range(len(R[i])):    
+                if R[i][j] == 0:
+                    continue
+                error = R[i][j] - predictedR[i][j]    
+                #calculating the gradient and updating P,Q,U,I  
+                for k in range(len(Q)):
+                    temp = P[i][k]
+                    P[i][k]+= 2*(alpha * ((error) * (Q[k][j])))
+                    Q[k][j] += 2*(alpha * ((error) * temp))   
+                I[j] += 2*(alpha * (error))
+                U[i] += 2*(alpha * (error))
     
     """"finally returns (iter,mse) values in a list"""
     return stats
@@ -56,10 +89,15 @@ def matrixFactorization(R,k,iterations, alpha):
     """Your code to initialize P, Q, U and I matrices goes here. P and Q will be randomly initialized whereas U and I will be initialized as zeros. 
     Be careful about the dimension of these matrices
     """
-#    P = 
-#    Q = 
-#    U = 
-#    I = 
+    random.seed(0)
+    P = []
+    Q = []
+    for i in range(len(R)):
+        P.append([random.randrange(0, 5) for i in range(k)])
+    for i in range(k):
+        Q.append([random.randrange(0, 5) for i in range(len(R[0]))])
+    U = np.zeros((len(R)))
+    I = np.zeros((len(R[0])))
 
     #Run gradient descent to minimize error
     stats = runGradientDescent(R,P,Q,U,I,iterations,alpha)
